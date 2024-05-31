@@ -1,4 +1,5 @@
 ﻿using EmployeeDirectory.Data.Data.Services;
+using EmployeeDirectory.Data.Services;
 using EmployeeDirectory.Models;
 using EmployeeDirectory.Models.Models;
 using EmployeeDirectory.Models.SummaryModels;
@@ -9,7 +10,7 @@ namespace EmployeeDirectory.Services
     {
         ICommonServices commonServices;
         IRoleDataService roleDataService;
-        public RoleService(ICommonServices commonServices, IRoleDataService roleDataService)
+        public RoleService(ICommonServices commonServices, IRoleDataService roleDataService, ICommonDataService commonDataService)
         {
             this.commonServices = commonServices;
             this.roleDataService = roleDataService;
@@ -57,13 +58,13 @@ namespace EmployeeDirectory.Services
             try
             {
                 Role role = new Role();
-                string departmentId = commonServices.GetIdFromName<Department>(roleSummary.Department).Data;
+                string departmentId = GetDepartmentIdByName(roleSummary.Department).Data;
                 if (departmentId == null)
                 {
                     departmentId = commonServices.GenerateNewId<Department>().Data;
                 }
 
-                string locationId = commonServices.GetIdFromName<Location>(roleSummary.Location).Data;
+                string locationId = GetLocationIdByName(roleSummary.Location).Data;
                 if (locationId == null)
                 {
                     locationId = commonServices.GenerateNewId<Location>().Data;
@@ -86,6 +87,51 @@ namespace EmployeeDirectory.Services
             catch (Exception ex)
             {
                 return ServiceResult<int>.Fail("Database Issue:" + ex.Message);
+            }
+        }
+
+        public ServiceResult<string> GetLocationIdByName(string name)
+        {
+            try
+            {
+                List<Location> locations = new();
+                var result = commonServices.GetAll<Location>();
+                if (result.IsOperationSuccess)
+                {
+                    locations = result.DataList;
+                    string locationId = locations.Where(loc => loc.Name==name).First().Id;
+                    return ServiceResult<string>.Success(locationId);
+                }
+                else
+                {
+                    return ServiceResult<string>.Fail(result.Message);
+                }
+            }
+            catch(Exception ex)
+            {
+                return ServiceResult<string>.Fail(ex.Message);
+            }
+        }
+        public ServiceResult<string> GetDepartmentIdByName(string name)
+        {
+            try
+            {
+                List<Department> departments = new();
+                var result = commonServices.GetAll<Department>();
+                if (result.IsOperationSuccess)
+                {
+                    departments = result.DataList;
+                    string departmentId = departments.Where(loc => loc.Name == name).First().Id;
+                    return ServiceResult<string>.Success(departmentId);
+                }
+                else
+                {
+                    return ServiceResult<string>.Fail(result.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<string>.Fail(ex.Message);
             }
         }
 

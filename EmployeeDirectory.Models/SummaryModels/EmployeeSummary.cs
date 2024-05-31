@@ -6,9 +6,9 @@
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }
-        public DateTime DOB { get; set; }
+        public DateOnly? DOB { get; set; }
         public string MobileNumber { get; set; }
-        public DateTime JoinDate { get; set; }
+        public DateOnly? JoinDate { get; set; }
         public string ProjectId { get; set; }
         public string ProjectName { get; set; }
         public string RoleId { get; set; }

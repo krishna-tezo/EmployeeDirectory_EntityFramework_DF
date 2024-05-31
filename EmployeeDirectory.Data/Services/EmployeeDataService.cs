@@ -1,6 +1,7 @@
 ﻿using EmployeeDirectory.Data.Data.Services;
 using EmployeeDirectory.Data.SummaryModels;
-using Microsoft.Data.SqlClient;
+using EmployeeDirectory.Models.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
 
 
@@ -8,82 +9,128 @@ namespace EmployeeDirectory.Data.Services
 {
     public class EmployeeDataService : IEmployeeDataService
     {
-        private IDbConnection dbConnection;
-        private ICommonDataService commonDataServices;
-        public EmployeeDataService(IDbConnection dbConnection, ICommonDataService commonDataServices)
+
+        private AppDBContext context;
+        public EmployeeDataService(AppDBContext context)
         {
-            this.dbConnection = dbConnection;
-            this.commonDataServices = commonDataServices;
+            this.context = context;
+
         }
+        public void MapProperties<TSource, TDestination>(TSource source, TDestination destination)
+        {
+            var sourceProperties = typeof(TSource).GetProperties();
+            var destinationProperties = typeof(TDestination).GetProperties();
+
+            foreach (var sourceProperty in sourceProperties)
+            {
+                var destinationProperty = destinationProperties.FirstOrDefault(p => p.Name == sourceProperty.Name && p.PropertyType == sourceProperty.PropertyType);
+                if (destinationProperty != null)
+                {
+                    var value = sourceProperty.GetValue(source);
+                    if (value != null)
+                    {
+                        destinationProperty.SetValue(destination, value);
+                    }
+                }
+            }
+        }
+
+
         public List<EmployeeSummary> GetEmployeesSummary()
         {
-            string query = "SELECT E.Id, E.FirstName, E.LastName, E.Email, E.DOB, E.MobileNumber, E.JoinDate, " +
-                "E.ProjectId, P.Name as ProjectName, E.RoleId, R.Name as Role, D.Id as DepartmentId, D.Name as Department, " +
-                "L.Id as LocationId, L.Name as Location, M.Id as ManagerId, CONCAT(K.FirstName,' ',K.LastName) as ManagerName, E.IsDeleted " +
-                "FROM Employee E " +
-                "JOIN Role R ON E.RoleId = R.Id " +
-                "JOIN Location L ON R.LocationId = L.Id " +
-                "JOIN Department D ON R.DepartmentId = D.Id " +
-                "JOIN Project P ON P.Id = E.ProjectId " +
-                "JOIN Manager M ON P.ManagerId = M.Id " +
-                "LEFT JOIN Employee K ON K.Id = M.EmpId WHERE E.IsDeleted!=1";
+            var employees = context.Employees
+                .Where(e => e.IsDeleted != true)
+                .Include(e => e.Project)
+                    .ThenInclude(p => p.Manager)
+                        .ThenInclude(m => m.Emp)
+                .Include(e => e.Role)
+                    .ThenInclude(r => r.Location)
+                .Include(e => e.Role)
+                    .ThenInclude(r => r.Department)
+                .ToList();
+
+            var employeeSummaries = new List<EmployeeSummary>();
+
+            foreach (var employee in employees)
+            {
+                var summary = new EmployeeSummary();
+                MapProperties(employee, summary);
 
 
-            return commonDataServices.GetAll(query, commonDataServices.MapObject<EmployeeSummary>);
+                summary.ProjectId = employee.ProjectId;
+                summary.ProjectName = employee.Project?.Name;
+
+                summary.Role = employee.Role?.Name;
+
+                summary.DepartmentId = employee.Role.DepartmentId;
+                summary.Department = employee.Role?.Department?.Name;
+
+                summary.LocationId = employee.Role.LocationId;
+                summary.Location = employee.Role?.Location?.Name;
+
+                summary.ManagerId = employee.Project.ManagerId;
+                summary.ManagerName = $"{employee.Project.Manager.Emp.FirstName} {employee.Project.Manager.Emp.LastName}";
+                
+
+                employeeSummaries.Add(summary);
+            }
+
+            return employeeSummaries;
         }
 
         public EmployeeSummary GetEmployeeSummaryById(string id)
         {
-            string query = "SELECT E.Id, E.FirstName, E.LastName, E.Email, E.DOB, E.MobileNumber, E.JoinDate, " +
-                "E.ProjectId, P.Name as ProjectName, E.RoleId, R.Name as Role, D.Id as DepartmentId, D.Name as Department, " +
-                "L.Id as LocationId, L.Name as Location, M.Id as ManagerId, CONCAT(K.FirstName,' ',K.LastName) as ManagerName , E.IsDeleted " +
-                "FROM Employee E " +
-                "JOIN Role R ON E.RoleId = R.Id " +
-                "JOIN Location L ON R.LocationId = L.Id " +
-                "JOIN Department D ON R.DepartmentId = D.Id " +
-                "JOIN Project P ON P.Id = E.ProjectId " +
-                "JOIN Manager M ON P.ManagerId = M.Id " +
-                "LEFT JOIN Employee K ON K.Id = M.EmpId WHERE E.Id = @Id AND E.IsDeleted!=1";
-            return commonDataServices.Get(query, id, commonDataServices.MapObject<EmployeeSummary>);
+            var employee = context.Employees
+                 .Where(e => e.IsDeleted != true)
+                 .Where(e => e.Id == id)
+                 .Include(e => e.Project)
+                     .ThenInclude(p => p.Manager)
+                         .ThenInclude(m => m.Emp)
+                 .Include(e => e.Role)
+                     .ThenInclude(r => r.Location)
+                 .Include(e => e.Role)
+                     .ThenInclude(r => r.Department)
+                  .FirstOrDefault();
+
+            if(employee == null)
+            {
+                return null;
+            }
+
+            EmployeeSummary summary = new EmployeeSummary();
+            MapProperties(employee, summary);
+
+            summary.ProjectId = employee.ProjectId;
+            summary.ProjectName = employee.Project?.Name;
+
+            summary.Role = employee.Role?.Name;
+
+            summary.DepartmentId = employee.Role.DepartmentId;
+            summary.Department = employee.Role?.Department?.Name;
+
+            summary.LocationId = employee.Role.LocationId;
+            summary.Location = employee.Role?.Location?.Name;
+
+            summary.ManagerId = employee.Project.ManagerId;
+            summary.ManagerName = $"{employee.Project.Manager.Emp.FirstName} {employee.Project.Manager.Emp.LastName}";
+
+            return summary;
+
         }
-
-
         public int DeleteEmployee(string id)
         {
-            int rowsAffected = -1;
+            int rowsAffected = 0;
 
-            using (SqlConnection conn = dbConnection.GetConnection())
+            var employee = context.Employees.FirstOrDefault(e => e.Id == id);
+
+            if (employee != null)
             {
-                string query = "UPDATE Employee SET IsDeleted = '1' WHERE Id=@Id";
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    cmd.CommandType = CommandType.Text;
-
-                    cmd.Parameters.AddWithValue("@Id", id);
-                    conn.Open();
-                    rowsAffected = cmd.ExecuteNonQuery();
-                    conn.Close();
-                }
+                employee.IsDeleted = true;
+                rowsAffected = context.SaveChanges();
             }
+
             return rowsAffected;
         }
-        public string GetLastEmployeeId()
-        {
-            string? result = null;
-            using (SqlConnection conn = dbConnection.GetConnection())
-            {
-                conn.Open();
-                string query = "SELECT MAX(id) FROM Employee";
-                using (SqlCommand cmd = new(query, conn))
-                {
-                    //TODO: Shift the new id to Service Layer
-                    result = cmd.ExecuteScalar().ToString();
-                    if (result == null)
-                        return "TEZ00001";  // If no employees exist, start with ID 1
-                }
-                conn.Close();
-                return result;
-            }
-        }
+
     }
 }

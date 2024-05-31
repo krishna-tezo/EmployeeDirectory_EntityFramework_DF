@@ -61,15 +61,16 @@ namespace EmployeeDirectory.UI.Controllers
         {
             EmployeeView employeeToView = new EmployeeView();
 
-            EmployeeSummary employeeSummary = employeeService.GetEmployee(empId).Data;
-
-            if (employeeSummary == null)
+            var result = employeeService.GetEmployee(empId);
+            if (result.IsOperationSuccess)
             {
-                return ServiceResult<EmployeeView>.Fail("Data not found");
+                EmployeeSummary employeeSummary = result.Data;
+                employeeToView = commonController.Map<EmployeeSummary, EmployeeView>(employeeSummary).Data;
+
             }
             else
             {
-                employeeToView = commonController.Map<EmployeeSummary, EmployeeView>(employeeSummary).Data;
+                return ServiceResult<EmployeeView>.Fail(result.Message);
             }
             return ServiceResult<EmployeeView>.Success(employeeToView);
         }

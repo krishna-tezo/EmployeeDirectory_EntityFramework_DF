@@ -11,34 +11,34 @@ using EmployeeDirectory.Data.Services;
 using EmployeeDirectory.Data;
 using EmployeeDirectory.Data.Data.Services;
 using EmployeeDirectory.UI.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using EmployeeDirectory.Models.Models;
 
 namespace EmployeeDirectory.Core
 {
     public class StartupService
     {
         private IServiceCollection services;
+        private IConfiguration configuration;
         public StartupService(IServiceCollection services)
         {
             this.services = services;
+
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+            configuration = builder.Build();
         }
 
         public ServiceProvider Configure()
         {
             var configBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
-            string connectionString = configBuilder.GetSection("ConnectionStrings")["MyDBConnectionString"];
-            if(connectionString != null)
-            {
-                services.AddScoped<IDbConnection> (db=> new DbConnection(connectionString));
-            }
-            else
-            {
-                throw new Exception("Error");
-            }
+            services.AddDbContext<AppDBContext>(options => options.UseSqlServer(configuration.GetConnectionString("MyDBConnectionString")));
             services.AddSingleton<ICommonDataService , CommonDataService>();
             services.AddSingleton<IEmployeeDataService , EmployeeDataService>();
             services.AddSingleton<IRoleDataService, RoleDataService>();
-            services.AddSingleton<IDataServiceManager, DataServiceManager>();
             services.AddSingleton<ICommonServices, CommonServices>();
             services.AddSingleton<IEmployeeService, EmployeeService>();
             services.AddSingleton<IRoleService, RoleService>();

@@ -7,7 +7,7 @@
         public string? Role { get; set; }
         public string? Department { get; set; }
         public string? Location { get; set; }
-        public DateTime JoinDate { get; set; }
+        public DateOnly? JoinDate { get; set; }
         public string? ManagerName { get; set; }
 
         public string? ProjectName { get;set; }

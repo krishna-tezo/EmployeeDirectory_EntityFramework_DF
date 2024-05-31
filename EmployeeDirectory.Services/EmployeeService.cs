@@ -1,5 +1,5 @@
-﻿using EmployeeDirectory.Data.Data.Services;
-using EmployeeDirectory.Data.Services;
+﻿
+using EmployeeDirectory.Data.Data.Services;
 using EmployeeDirectory.Data.SummaryModels;
 using EmployeeDirectory.Models;
 
@@ -43,20 +43,20 @@ namespace EmployeeDirectory.Services
             try
             {
                 employee = employeeDataService.GetEmployeeSummaryById(id);
+                if (employee != null)
+                {
+                    return ServiceResult<EmployeeSummary>.Success(employee);
+                }
+                else
+                {
+                    return ServiceResult<EmployeeSummary>.Fail("No Employee Found");
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
+                return ServiceResult<EmployeeSummary>.Fail("Database Issue:"+ex.Message);
             }
-            if (employee != null)
-            {
-                return ServiceResult<EmployeeSummary>.Success(employee);
-            }
-            else
-            {
-                return ServiceResult<EmployeeSummary>.Fail("No Role");
-            }
+            
         }
 
         public ServiceResult<int> Delete(string id)
@@ -79,5 +79,7 @@ namespace EmployeeDirectory.Services
             }
             
         }
+
+        
     }
 }

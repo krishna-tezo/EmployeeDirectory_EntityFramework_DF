@@ -146,11 +146,11 @@ namespace EmployeeDirectory.UI.UIServices
             }
             while (true);
 
-            DateTime dob;
+            DateOnly dob;
             do
             {
                 Console.Write("Enter Dob (mm/dd/yyyy):");
-                if (DateTime.TryParseExact(Console.ReadLine(), "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dob))
+                if (DateOnly.TryParseExact(Console.ReadLine(), "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dob))
                 {
                     break;
                 }
@@ -191,12 +191,12 @@ namespace EmployeeDirectory.UI.UIServices
             }
             while (true);
 
-            DateTime joinDate;
+            DateOnly joinDate;
             do
             {
                 Console.Write("Enter Join Date (mm/dd/yyyy):");
 
-                if (DateTime.TryParseExact(Console.ReadLine(), "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out joinDate))
+                if (DateOnly.TryParseExact(Console.ReadLine(), "MM/dd/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out joinDate))
                 {
                     break;
                 }
@@ -221,7 +221,7 @@ namespace EmployeeDirectory.UI.UIServices
             employee.FirstName = firstName;
             employee.LastName = lastName;
             employee.Email = email;
-            employee.DOB = dob;
+            employee.Dob = dob;
             employee.MobileNumber = mobileNumber;
             employee.JoinDate = joinDate;
             employee.RoleId = roleId;
@@ -404,7 +404,7 @@ namespace EmployeeDirectory.UI.UIServices
             employees.ForEach((emp) =>
             {
                 string empData = String.Format("|{0,10}|{1,20}|{2,30}|{3,20}|{4,20}|{5,20}|{6,20}|{7,20}|",
-                        emp.Id, emp.Name, emp.Role, emp.Department, emp.Location, emp.JoinDate.ToString("MM/dd/yyyy"), emp.ManagerName, emp.ProjectName);
+                        emp.Id, emp.Name, emp.Role, emp.Department, emp.Location, emp.JoinDate.ToString(), emp.ManagerName, emp.ProjectName);
                 Console.WriteLine(empData);
             });
 

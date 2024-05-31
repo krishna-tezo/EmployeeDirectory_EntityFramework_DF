@@ -1,24 +1,25 @@
 ﻿using EmployeeDirectory.Data.Services;
 using EmployeeDirectory.Models;
+using EmployeeDirectory.Models.Models;
 
 namespace EmployeeDirectory.Services
 {
     public class CommonServices : ICommonServices
     {
-        IDataServiceManager dataServiceManager;
-        public CommonServices(IDataServiceManager dataServiceManager)
+        ICommonDataService commonDataService;
+        public CommonServices(ICommonDataService commonDataService)
         {
-            this.dataServiceManager = dataServiceManager;
+            this.commonDataService = commonDataService;
         }
 
         //Get All
-        public ServiceResult<T> GetAll<T>() where T : new()
+        public ServiceResult<T> GetAll<T>() where T : class
         {
 
             List<T> collection = [];
             try
             {
-                collection = dataServiceManager.GetAll<T>();
+                collection = commonDataService.GetAll<T>();
                 if (typeof(T).Name == "Employee")
                 {
                     var propertyInfo = typeof(T).GetProperty("IsDeleted");
@@ -41,11 +42,11 @@ namespace EmployeeDirectory.Services
         }
 
         //Get
-        public ServiceResult<T> Get<T>(string id) where T : new()
+        public ServiceResult<T> Get<T>(string id) where T : class
         {
             try
             {
-                T entity = dataServiceManager.Get<T>(id);
+                T entity = commonDataService.Get<T>(id);
                 if (entity == null)
                 {
                     return ServiceResult<T>.Fail($"{typeof(T).Name} Id {id} doesn't exist");
@@ -59,11 +60,11 @@ namespace EmployeeDirectory.Services
         }
 
         //Add
-        public ServiceResult<int> Add<T>(T obj) where T : new()
+        public ServiceResult<int> Add<T>(T obj) where T : class
         {
             try
             {
-                int rowsAffected = dataServiceManager.Insert(obj);
+                int rowsAffected = commonDataService.InsertOrUpdate(obj);
                 if (rowsAffected == 0)
                 {
                     return ServiceResult<int>.Fail("Database Connectivity Issue");
@@ -77,7 +78,7 @@ namespace EmployeeDirectory.Services
         }
 
         //Update
-        public ServiceResult<int> Update<T>(T newObj) where T : new()
+        public ServiceResult<int> Update<T>(T newObj) where T : class
         {
             try
             {
@@ -85,11 +86,11 @@ namespace EmployeeDirectory.Services
 
                 string id = typeof(T).GetProperty("Id").GetValue(newObj).ToString();
 
-                T? existingEntity = dataServiceManager.Get<T>(id);
+                T? existingEntity = commonDataService.Get<T>(id);
 
                 if (existingEntity != null)
                 {
-                    int rowsAffected = dataServiceManager.Update(newObj);
+                    int rowsAffected = commonDataService.InsertOrUpdate(newObj);
                     return ServiceResult<int>.Success(rowsAffected, $"{rowsAffected} employee has been updated");
                 }
                 else
@@ -101,91 +102,127 @@ namespace EmployeeDirectory.Services
             {
                 return ServiceResult<int>.Fail("Database Issue:" + ex.Message);
             }
-        }
-
-        //Delete
-        public ServiceResult<int> Delete<T>(string id) where T : new()
-        {
-            return ServiceResult<int>.Success(1);
-        }
-
-        //Get Id From Name
-        public ServiceResult<string> GetIdFromName<T>(string Name)
+        }        
+        public ServiceResult<string> GenerateNewId<T>()
         {
             try
             {
-                string id = dataServiceManager.GetIdByName<T>(Name);
-                if (id != null)
+                string lastId;
+                string entityName = typeof(T).Name;
+                string prefix = "";
+                int suffixCount = 4;
+                switch (entityName)
                 {
-                    return ServiceResult<string>.Success(id);
+                    case "Employee":
+                        Employee employee = commonDataService.GetLast<Employee>();
+                        lastId = employee.Id;
+                        if (employee == null)
+                        {
+                            return ServiceResult<string>.Success("TEZ00001");
+                        }
+                        else
+                        {
+                            prefix = "TEZ";
+                            suffixCount = 5;
+                        }
+                        break;
+
+                    case "Role":
+                        Role role = commonDataService.GetLast<Role>();
+                        lastId = role.Id;
+                        if (lastId == null)
+                        {
+                            return ServiceResult<string>.Success("RL0001");
+                        }
+                        else
+                        {
+                            prefix = "RL";
+                        }
+                        break;
+
+                    case "Project":
+                        Project project = commonDataService.GetLast<Project>();
+                        lastId = project.Id;
+                        if (lastId == null)
+                        {
+                            return ServiceResult<string>.Success("PR0001");
+                        }
+                        else
+                        {
+                            prefix = "PR";
+                        }
+                        break;
+
+
+                    case "Department":
+                        Department department = commonDataService.GetLast<Department>();
+                        lastId = department.Id;
+                        if (lastId == null)
+                        {
+                            return ServiceResult<string>.Success("DEP001");
+                        }
+                        else
+                        {
+                            prefix = "RL";
+                            suffixCount = 3;
+
+                        }
+                        break;
+
+                    case "Location":
+                        Location location = commonDataService.GetLast<Location>();
+                        lastId = location.Id;
+                        if (lastId == null)
+                        {
+                            return ServiceResult<string>.Success("LOC001");
+                        }
+                        else
+                        {
+                            prefix = "LOC";
+                            suffixCount = 3;
+
+                        }
+                        break;
+
+                    case "Manager":
+                        Manager manager = commonDataService.GetLast<Manager>();
+                        lastId = manager.Id;
+                        if (lastId == null)
+                        {
+                            return ServiceResult<string>.Success("MR0001");
+                        }
+                        else
+                        {
+                            prefix = "MR";
+
+                        }
+                        break;
+
+                    default:
+                        lastId = null;
+                        break;
+
+                }
+                string numericPart = lastId.Substring(prefix.Length);
+
+                if (int.TryParse(numericPart, out int numericId))
+                {
+                    int newNumericId = numericId + 1;
+                    string newId = prefix + newNumericId.ToString($"D{suffixCount}");
+                    return ServiceResult<string>.Success(newId);
                 }
                 else
                 {
-                    id = GenerateNewId<T>().Data;
-                    return ServiceResult<string>.Success(id);
+                    return ServiceResult<string>.Fail("Invalid Employee Id Format");
                 }
+
+
             }
             catch (Exception ex)
             {
-                return ServiceResult<string>.Fail("Database Issue:" + ex.Message);
+                return ServiceResult<string>.Fail("DataBase Error" + ex.Message);
             }
+
         }
-
-        //Generate new id
-        public ServiceResult<string> GenerateNewId<T>()
-        {
-            string lastId = dataServiceManager.GetLastId<T>();
-            string prefix = "";
-            int suffixCount = 4;
-            string entityName = typeof(T).Name;
-            switch (entityName)
-            {
-                case "Employee":
-                    prefix = "TEZ";
-                    suffixCount = 5;
-
-                    break;
-
-                case "Role":
-                    prefix = "RL";
-                    break;
-
-                case "Project":
-                    prefix = "PR";
-                    break;
-
-                case "Manager":
-                    prefix = "MR";
-                    break;
-
-                case "Department":
-                    prefix = "DPT";
-                    suffixCount = 3;
-                    break;
-
-                case "Location":
-                    prefix = "LOC";
-                    suffixCount = 3;
-                    break;
-
-                default:
-                    prefix = "";
-                    break;
-            }
-
-            string numericPart = lastId.Substring(prefix.Length);
-
-            if (int.TryParse(numericPart, out int numericId))
-            {
-                int newNumericId = numericId + 1;
-                string newId = prefix + newNumericId.ToString($"D{suffixCount}");
-                return ServiceResult<string>.Success(newId);
-            }
-            else
-            {
-                return ServiceResult<string>.Fail("Invalid Employee Id Format");
-            }
-        }
-
     }
 }

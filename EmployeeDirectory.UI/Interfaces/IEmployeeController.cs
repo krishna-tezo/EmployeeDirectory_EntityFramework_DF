@@ -1,5 +1,5 @@
-﻿using EmployeeDirectory.Data.SummaryModels;
-using EmployeeDirectory.Models;
+﻿using EmployeeDirectory.Models;
+using EmployeeDirectory.Models.Models;
 using EmployeeDirectory.ViewModel;
 
 namespace EmployeeDirectory.UI.Controllers
