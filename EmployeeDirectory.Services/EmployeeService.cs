@@ -70,7 +70,7 @@ namespace EmployeeDirectory.Services
                 }
                 else
                 {
-                    return ServiceResult<int>.Fail("Cound't delete");
+                    return ServiceResult<int>.Fail("Couldn't delete");
                 }
             }
             catch(Exception ex)
@@ -79,7 +79,5 @@ namespace EmployeeDirectory.Services
             }
             
         }
-
-        
     }
 }

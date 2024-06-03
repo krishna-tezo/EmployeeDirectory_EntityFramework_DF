@@ -8,7 +8,6 @@ using EmployeeDirectory.Controllers;
 using EmployeeDirectory.UI.Controllers;
 using Microsoft.Extensions.Configuration;
 using EmployeeDirectory.Data.Services;
-using EmployeeDirectory.Data;
 using EmployeeDirectory.Data.Data.Services;
 using EmployeeDirectory.UI.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -33,13 +32,11 @@ namespace EmployeeDirectory.Core
 
         public ServiceProvider Configure()
         {
-            var configBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-
             services.AddDbContext<AppDBContext>(options => options.UseSqlServer(configuration.GetConnectionString("MyDBConnectionString")));
             services.AddSingleton<ICommonDataService , CommonDataService>();
             services.AddSingleton<IEmployeeDataService , EmployeeDataService>();
             services.AddSingleton<IRoleDataService, RoleDataService>();
-            services.AddSingleton<ICommonServices, CommonServices>();
+            services.AddSingleton<ICommonServices, CommonServices>(); //remove this
             services.AddSingleton<IEmployeeService, EmployeeService>();
             services.AddSingleton<IRoleService, RoleService>();
             services.AddSingleton<IUIService, UIService>();
@@ -48,7 +45,7 @@ namespace EmployeeDirectory.Core
             services.AddSingleton<IValidator, Validator>();
             services.AddSingleton<IEmployeeController, EmployeeController>();
             services.AddSingleton<IRoleController, RoleController>();
-            services.AddSingleton<ICommonController, CommonController>();
+            services.AddSingleton<ICommonController, CommonController>(); //remove this
             services.AddSingleton<MainMenu>();
             
 

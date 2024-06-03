@@ -64,7 +64,7 @@ namespace EmployeeDirectory.Services
         {
             try
             {
-                int rowsAffected = commonDataService.InsertOrUpdate(obj);
+                int rowsAffected = commonDataService.Insert(obj);
                 if (rowsAffected == 0)
                 {
                     return ServiceResult<int>.Fail("Database Connectivity Issue");
@@ -90,7 +90,7 @@ namespace EmployeeDirectory.Services
 
                 if (existingEntity != null)
                 {
-                    int rowsAffected = commonDataService.InsertOrUpdate(newObj);
+                    int rowsAffected = commonDataService.Update(newObj);
                     return ServiceResult<int>.Success(rowsAffected, $"{rowsAffected} employee has been updated");
                 }
                 else
@@ -115,13 +115,13 @@ namespace EmployeeDirectory.Services
                 {
                     case "Employee":
                         Employee employee = commonDataService.GetLast<Employee>();
-                        lastId = employee.Id;
                         if (employee == null)
                         {
                             return ServiceResult<string>.Success("TEZ00001");
                         }
                         else
                         {
+                            lastId = employee.Id;
                             prefix = "TEZ";
                             suffixCount = 5;
                         }
@@ -129,26 +129,26 @@ namespace EmployeeDirectory.Services
 
                     case "Role":
                         Role role = commonDataService.GetLast<Role>();
-                        lastId = role.Id;
-                        if (lastId == null)
+                        if (role == null)
                         {
                             return ServiceResult<string>.Success("RL0001");
                         }
                         else
                         {
+                            lastId = role.Id;
                             prefix = "RL";
                         }
                         break;
 
                     case "Project":
                         Project project = commonDataService.GetLast<Project>();
-                        lastId = project.Id;
-                        if (lastId == null)
+                        if (project == null)
                         {
                             return ServiceResult<string>.Success("PR0001");
                         }
                         else
                         {
+                            lastId = project.Id;
                             prefix = "PR";
                         }
                         break;
@@ -156,14 +156,14 @@ namespace EmployeeDirectory.Services
 
                     case "Department":
                         Department department = commonDataService.GetLast<Department>();
-                        lastId = department.Id;
-                        if (lastId == null)
+                        if (department == null)
                         {
                             return ServiceResult<string>.Success("DEP001");
                         }
                         else
                         {
-                            prefix = "RL";
+                            lastId = department.Id;
+                            prefix = "DPT";
                             suffixCount = 3;
 
                         }
@@ -171,13 +171,13 @@ namespace EmployeeDirectory.Services
 
                     case "Location":
                         Location location = commonDataService.GetLast<Location>();
-                        lastId = location.Id;
-                        if (lastId == null)
+                        if (location == null)
                         {
                             return ServiceResult<string>.Success("LOC001");
                         }
                         else
                         {
+                            lastId = location.Id;
                             prefix = "LOC";
                             suffixCount = 3;
 
@@ -186,13 +186,13 @@ namespace EmployeeDirectory.Services
 
                     case "Manager":
                         Manager manager = commonDataService.GetLast<Manager>();
-                        lastId = manager.Id;
-                        if (lastId == null)
+                        if (manager == null)
                         {
                             return ServiceResult<string>.Success("MR0001");
                         }
                         else
                         {
+                            lastId = manager.Id;
                             prefix = "MR";
 
                         }
@@ -215,8 +215,6 @@ namespace EmployeeDirectory.Services
                 {
                     return ServiceResult<string>.Fail("Invalid Employee Id Format");
                 }
-
-
             }
             catch (Exception ex)
             {

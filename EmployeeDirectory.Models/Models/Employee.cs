@@ -24,11 +24,11 @@ public partial class Employee : IHasAuditProperties
 
     public bool? IsDeleted { get; set; }
 
-    public string CreatedBy { get; set; } = null!;
+    public string CreatedBy { get; set; }
 
     public DateOnly? CreatedDate { get; set; }
 
-    public string ModifiedBy { get; set; } = null!;
+    public string ModifiedBy { get; set; }
 
     public DateOnly? ModifiedDate { get; set; }
 

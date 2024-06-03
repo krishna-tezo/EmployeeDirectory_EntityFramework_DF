@@ -1,6 +1,4 @@
 ﻿using EmployeeDirectory.Models.Models;
-using System.ComponentModel;
-using System.Linq.Expressions;
 
 
 namespace EmployeeDirectory.Data.Services
@@ -30,9 +28,16 @@ namespace EmployeeDirectory.Data.Services
         }
 
         //Insert
-        public int InsertOrUpdate<T>(T obj)
+        public int Insert<T>(T obj)
         {
             context.Add(obj);
+            int changesSaved = context.SaveChanges();
+
+            return changesSaved;
+        }
+        public int Update<T>(T newObj)
+        {
+            context.Update(newObj);
             int changesSaved = context.SaveChanges();
 
             return changesSaved;
@@ -59,20 +64,13 @@ namespace EmployeeDirectory.Data.Services
             {
                 throw new InvalidOperationException($"The type {type.Name} does not have an 'id' property.");
             }
+            else
+            {
+                T obj = context.Set<T>().ToList().Last();
+                return obj;
+            }
 
-            var parameter = Expression.Parameter(type, "x");
-            var propertyExpression = Expression.Property(parameter, idProperty);
-            var lambda = Expression.Lambda(propertyExpression, parameter);
-
-            var orderByDescendingMethod = typeof(Queryable).GetMethods()
-                .First(m => m.Name == "OrderByDescending" && m.GetParameters().Length == 2)
-                .MakeGenericMethod(type, idProperty.PropertyType);
-
-            var orderedQuery = (IQueryable<T>)orderByDescendingMethod.Invoke(null, new object[] { context.Set<T>(), lambda });
-
-            return orderedQuery.FirstOrDefault();
+           
         }
-
-
     }
 }

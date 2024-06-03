@@ -10,7 +10,7 @@ namespace EmployeeDirectory.Services
     {
         ICommonServices commonServices;
         IRoleDataService roleDataService;
-        public RoleService(ICommonServices commonServices, IRoleDataService roleDataService, ICommonDataService commonDataService)
+        public RoleService(ICommonServices commonServices, IRoleDataService roleDataService)
         {
             this.commonServices = commonServices;
             this.roleDataService = roleDataService;
