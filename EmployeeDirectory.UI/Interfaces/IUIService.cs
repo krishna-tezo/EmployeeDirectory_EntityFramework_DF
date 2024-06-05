@@ -11,7 +11,7 @@ namespace EmployeeDirectory.Interfaces
         void AddRole();
         void DeleteEmployee();
         void EditEmployee();
-        Employee GetEmployeeDetailsFromConsole(Employee employee, EmployeeFormType formType, string empId = "");
+        EmployeeModel GetEmployeeDetailsFromConsole(EmployeeModel employee, EmployeeFormType formType, string empId = "");
         
         void ShowEmployeesDataInTabularFormat(List<EmployeeView> employees);
         void ShowRolesDataInTabularFormat(List<RoleView> roles);

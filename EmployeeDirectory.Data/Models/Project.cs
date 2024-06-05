@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace EmployeeDirectory.Models.Models;
-
+﻿
+namespace EmployeeDirectory.Data.Models;
 public partial class Project
 {
     public string Id { get; set; } = null!;

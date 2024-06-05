@@ -7,11 +7,10 @@ using EmployeeDirectory.Services;
 using EmployeeDirectory.Controllers;
 using EmployeeDirectory.UI.Controllers;
 using Microsoft.Extensions.Configuration;
-using EmployeeDirectory.Data.Services;
-using EmployeeDirectory.Data.Data.Services;
-using EmployeeDirectory.UI.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using EmployeeDirectory.Models.Models;
+using EmployeeDirectory.Data.Models;
+using EmployeeDirectory.Data.Interfaces;
+using EmployeeDirectory.Data.Repositories;
 
 namespace EmployeeDirectory.Core
 {
@@ -26,27 +25,32 @@ namespace EmployeeDirectory.Core
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+           
 
             configuration = builder.Build();
+            
         }
 
         public ServiceProvider Configure()
         {
-            services.AddDbContext<AppDBContext>(options => options.UseSqlServer(configuration.GetConnectionString("MyDBConnectionString")));
-            services.AddSingleton<ICommonDataService , CommonDataService>();
-            services.AddSingleton<IEmployeeDataService , EmployeeDataService>();
-            services.AddSingleton<IRoleDataService, RoleDataService>();
-            services.AddSingleton<ICommonServices, CommonServices>(); //remove this
-            services.AddSingleton<IEmployeeService, EmployeeService>();
-            services.AddSingleton<IRoleService, RoleService>();
-            services.AddSingleton<IUIService, UIService>();
-            services.AddSingleton<IEmployeeMenu, EmployeeMenu>();
-            services.AddSingleton<IRoleMenu, RoleMenu>();
-            services.AddSingleton<IValidator, Validator>();
-            services.AddSingleton<IEmployeeController, EmployeeController>();
-            services.AddSingleton<IRoleController, RoleController>();
-            services.AddSingleton<ICommonController, CommonController>(); //remove this
-            services.AddSingleton<MainMenu>();
+            services.AddDbContext<AppDBContext>(options =>
+            {
+                options.UseSqlServer(configuration.GetConnectionString("MyDBConnectionString"))
+                       .EnableSensitiveDataLogging();
+            });
+
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IEmployeeService, EmployeeService>();
+            services.AddScoped<IUIService, UIService>();
+            services.AddScoped<IEmployeeMenu, EmployeeMenu>();
+            services.AddScoped<IRoleMenu, RoleMenu>();
+            services.AddScoped<IValidationService, ValidationService>();
+            services.AddScoped<IEmployeeController, EmployeeController>();
+            services.AddScoped<IRoleController, RoleController>();
+            services.AddScoped<MainMenu>();
             
 
             return services.BuildServiceProvider();

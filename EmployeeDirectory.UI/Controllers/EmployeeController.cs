@@ -3,26 +3,22 @@ using EmployeeDirectory.ViewModel;
 using EmployeeDirectory.Models.Models;
 using EmployeeDirectory.Services;
 using EmployeeDirectory.Data.SummaryModels;
-using EmployeeDirectory.UI.Interfaces;
 namespace EmployeeDirectory.UI.Controllers
 {
     public class EmployeeController : IEmployeeController
     {
-        ICommonServices commonServices;
         IEmployeeService employeeService;
-        ICommonController commonController;
+       
        
 
-        public EmployeeController(ICommonServices commonServices, IEmployeeService employeeService, ICommonController commonController)
+        public EmployeeController(IEmployeeService employeeService)
         {
-            this.commonServices = commonServices;
             this.employeeService = employeeService;
-            this.commonController = commonController;
         }
 
         public ServiceResult<string> GetNewEmployeeId()
         {
-            string empId = commonServices.GenerateNewId<Employee>().Data;
+            string empId = employeeService.GenerateNewId<EmployeeModel>().Data;
             if (empId == null)
             {
                 empId = "TEZ00001";
@@ -30,30 +26,30 @@ namespace EmployeeDirectory.UI.Controllers
             return ServiceResult<string>.Success(empId);
         }
 
-        public ServiceResult<EmployeeView> ViewEmployees()
+        public ServiceResult<List<EmployeeView>> ViewEmployees()
         {
-            var employees = employeeService.GetEmployees();
+            var employees = employeeService.GetEmployeeSummaries();
 
             if (!employees.IsOperationSuccess)
             {
-                return ServiceResult<EmployeeView>.Fail($"{employees.Message}");
+                return ServiceResult<List<EmployeeView>>.Fail($"{employees.Message}");
             }
 
-            List<EmployeeSummary> employeesSummary = employees.DataList;
+            List<EmployeeSummary> employeesSummary = employees.Data;
             List<EmployeeView> employeesToView = new List<EmployeeView>();
 
             foreach (EmployeeSummary employee in employeesSummary)
             {
-                employeesToView.Add(commonController.Map<EmployeeSummary,EmployeeView>(employee).Data);
+                employeesToView.Add(MapSummaryToView(employee).Data);
             }
 
             if (employeesToView.Count > 0)
             {
-                return ServiceResult<EmployeeView>.Success(employeesToView);
+                return ServiceResult<List<EmployeeView>>.Success(employeesToView);
             }
             else
             {
-                return ServiceResult<EmployeeView>.Fail("No Employee To Show");
+                return ServiceResult<List<EmployeeView>>.Fail("No Employee To Show");
             }
         }
 
@@ -61,11 +57,11 @@ namespace EmployeeDirectory.UI.Controllers
         {
             EmployeeView employeeToView = new EmployeeView();
 
-            var result = employeeService.GetEmployee(empId);
+            var result = employeeService.GetEmployeeSummary(empId);
             if (result.IsOperationSuccess)
             {
                 EmployeeSummary employeeSummary = result.Data;
-                employeeToView = commonController.Map<EmployeeSummary, EmployeeView>(employeeSummary).Data;
+                employeeToView = MapSummaryToView(employeeSummary).Data;
 
             }
             else
@@ -75,19 +71,29 @@ namespace EmployeeDirectory.UI.Controllers
             return ServiceResult<EmployeeView>.Success(employeeToView);
         }
 
-        public ServiceResult<Employee> GetEmployeeById(string id)
+        public ServiceResult<EmployeeModel> GetEmployeeById(string id)
         {
-            return commonServices.Get<Employee>(id);
+            var result = employeeService.GetEmployeeSummary(id);
+            if (result.IsOperationSuccess)
+            {
+                EmployeeModel employee = result.Data.Employee;
+                return ServiceResult<EmployeeModel>.Success(employee);
+            }
+            else
+            {
+                return ServiceResult<EmployeeModel>.Fail(result.Message);
+            }
         }
 
-        public ServiceResult<int> AddEmployee(Employee employee)
+        public ServiceResult<int> AddEmployee(EmployeeModel employee)
         {
-            return commonServices.Add<Employee>(employee);
+            
+            return employeeService.AddEmployee(employee);
         }
 
-        public ServiceResult<int> EditEmployee(Employee employee)
+        public ServiceResult<int> EditEmployee(EmployeeModel employee)
         {
-            return commonServices.Update(employee);
+            return employeeService.UpdateEmployee(employee);
         }
 
         public ServiceResult<int> DeleteEmployee(string empId)
@@ -99,7 +105,7 @@ namespace EmployeeDirectory.UI.Controllers
         {
             try
             {
-                List<Project> projects = commonServices.GetAll<Project>().DataList;
+                List<ProjectModel> projects = employeeService.GetAllProjects().Data;
                 List<Tuple<string, string>> projectDetails = projects
                     .Select(project => new { project.Id, project.Name })
                     .AsEnumerable()
@@ -111,6 +117,29 @@ namespace EmployeeDirectory.UI.Controllers
             catch (Exception ex)
             {
                 return ServiceResult<List<Tuple<string, string>>>.Fail(ex.Message);
+            }
+        }
+
+        private ServiceResult<EmployeeView> MapSummaryToView(EmployeeSummary summary)
+        {
+            try
+            {
+                EmployeeView employee = new EmployeeView()
+                {
+                    Id = summary.Employee.Id,
+                    Name = $"{summary.Employee.FirstName} {summary.Employee.LastName}",
+                    Role = summary.Role.Name,
+                    Department = summary.Department.Name,
+                    Location = summary.Location.Name,
+                    JoinDate = summary.Employee.JoinDate,
+                    ManagerName = summary.ManagerName,
+                    ProjectName = summary.Project.Name
+                };
+                return ServiceResult<EmployeeView>.Success(employee);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<EmployeeView>.Fail("Error Occurred while mapping: "+ex.Message);
             }
         }
     }

@@ -1,9 +1,7 @@
-﻿using EmployeeDirectory.Data.SummaryModels;
-using EmployeeDirectory.Models;
+﻿using EmployeeDirectory.Models;
 using EmployeeDirectory.Models.Models;
 using EmployeeDirectory.Models.SummaryModels;
 using EmployeeDirectory.Services;
-using EmployeeDirectory.UI.Interfaces;
 using EmployeeDirectory.UI.ViewModels;
 
 using System.Data;
@@ -12,49 +10,43 @@ namespace EmployeeDirectory.Controllers
 {
     public class RoleController : IRoleController
     {
-        private readonly ICommonServices commonServices;
         private readonly IRoleService roleService;
-        private readonly ICommonController commonController;
 
-        public RoleController(ICommonServices commonServices, IRoleService roleService, ICommonController commonController)
+        public RoleController(IRoleService roleService)
         {
-            this.commonServices = commonServices;
             this.roleService = roleService;
-            this.commonController = commonController;
         }
 
         //View All Roles
-        public ServiceResult<RoleView> ViewRoles()
+        public ServiceResult<List<RoleView>> ViewRoles()
         {
 
-            List<RoleSummary> roles = roleService.GetRoles().DataList;
+            List<RoleSummary> roles = roleService.GetRolesSummary().Data;
             List<RoleView> rolesToView = new List<RoleView>();
             if (roles != null)
             {
                 foreach (RoleSummary role in roles)
                 {
-                    rolesToView.Add(commonController.Map<RoleSummary, RoleView>(role).Data);
+                    rolesToView.Add(MapSummaryToView(role).Data);
                 }
-                return ServiceResult<RoleView>.Success(rolesToView);
+                return ServiceResult<List<RoleView>>.Success(rolesToView);
             }
             else
             {
-                return ServiceResult<RoleView>.Fail("Some Error Occurred");
+                return ServiceResult<List<RoleView>>.Fail("Some Error Occurred");
             }
         }
 
         //Add a role
         public ServiceResult<int> Add(RoleView viewRole)
         {
-            Role role = new Role();
+            RoleModel role = new RoleModel();
             RoleSummary roleSummary = new RoleSummary
             {
-                Id = viewRole.Id,
-                Name = viewRole.Name,
-                Description = viewRole.Description,
-                Department = viewRole.Department,
-                Location = viewRole.Location,
-
+                Role = new RoleModel { Id = viewRole.Id, Name = viewRole.Name },
+                Department = new DepartmentModel { Name = viewRole.Department },
+                Location = new LocationModel { Name = viewRole.Location},
+                Description = viewRole.Description
             };
             return roleService.Add(roleSummary);
             
@@ -64,7 +56,7 @@ namespace EmployeeDirectory.Controllers
         //Generate a new Role Id
         public ServiceResult<string> GenerateRoleId()
         {
-            return commonServices.GenerateNewId<Role>();
+            return roleService.GenerateNewId<RoleModel>();
         }
 
         // Get All Role Names along with location name
@@ -73,7 +65,7 @@ namespace EmployeeDirectory.Controllers
             // Return RoleId, RoleName and Location
             try
             {
-                List<RoleView> roles = ViewRoles().DataList;
+                List<RoleView> roles = ViewRoles().Data;
                 List<Tuple<string, string, string>> roleDetails = roles
                     .Select(role => new { role.Id, role.Name, role.Location })
                     .OrderBy(role => role.Name)
@@ -101,7 +93,7 @@ namespace EmployeeDirectory.Controllers
         {
             try
             {
-                List<Department> departments = commonServices.GetAll<Department>().DataList;
+                List<DepartmentModel> departments = roleService.GetAllDepartments().Data;
                 List<string> departmentsName = departments.Select(dept => dept.Name).Distinct().ToList();
                 return ServiceResult<List<string>>.Success(departmentsName);
             }
@@ -110,5 +102,27 @@ namespace EmployeeDirectory.Controllers
                 return ServiceResult<List<string>>.Fail(ex.Message);
             }
         }
+
+        //Mapping
+        private ServiceResult<RoleView> MapSummaryToView(RoleSummary summary)
+        {
+            try
+            {
+                RoleView employee = new RoleView()
+                {
+                    Id = summary.Role.Id,
+                    Name = summary.Role.Name,
+                    Department = summary.Department.Name,
+                    Location = summary.Location.Name,
+                    Description = summary.Description
+                };
+                return ServiceResult<RoleView>.Success(employee);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<RoleView>.Fail("Error Occurred while mapping: " + ex.Message);
+            }
+        }
+        
     }
 }

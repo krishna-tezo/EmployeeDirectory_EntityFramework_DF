@@ -17,9 +17,9 @@ namespace EmployeeDirectory.UI.UIServices
 
         private readonly IRoleController roleController;
         private readonly IEmployeeController employeeController;
-        private readonly IValidator validator;
+        private readonly IValidationService validator;
 
-        public UIService(IEmployeeController employeeController, IRoleController roleController, IValidator validator)
+        public UIService(IEmployeeController employeeController, IRoleController roleController, IValidationService validator)
         {
             this.roleController = roleController;
             this.employeeController = employeeController;
@@ -32,7 +32,7 @@ namespace EmployeeDirectory.UI.UIServices
         public void AddEmployee()
         {
             Console.WriteLine("\n----Welcome to Add Employee Form----\n");
-            Employee employee = GetEmployeeDetailsFromConsole(new Employee(), EmployeeFormType.Add);
+            EmployeeModel employee = GetEmployeeDetailsFromConsole(new EmployeeModel(), EmployeeFormType.Add);
             ServiceResult<int> result = employeeController.AddEmployee(employee);
             Console.WriteLine(result.Message);
 
@@ -41,7 +41,7 @@ namespace EmployeeDirectory.UI.UIServices
         //Edit Employee
         public void EditEmployee()
         {
-            Employee? employee;
+            EmployeeModel? employee;
             Console.WriteLine("\n----Welcome To Edit Employee Form----\n");
 
             string? empId;
@@ -59,7 +59,7 @@ namespace EmployeeDirectory.UI.UIServices
                 }
                 else
                 {
-                    ServiceResult<Employee> result = employeeController.GetEmployeeById(empId);
+                    ServiceResult<EmployeeModel> result = employeeController.GetEmployeeById(empId);
 
                     if (result.IsOperationSuccess)
                     {
@@ -76,7 +76,7 @@ namespace EmployeeDirectory.UI.UIServices
         }
 
         //Get Employee Details From Console
-        public Employee GetEmployeeDetailsFromConsole(Employee employee, EmployeeFormType formType, string? empId = "")
+        public EmployeeModel GetEmployeeDetailsFromConsole(EmployeeModel employee, EmployeeFormType formType, string? empId = "")
         {
 
             Console.WriteLine("----Input Employee Details----");
@@ -327,14 +327,14 @@ namespace EmployeeDirectory.UI.UIServices
         public void ViewEmployees()
         {
 
-            ServiceResult<EmployeeView> result = employeeController.ViewEmployees();
+            ServiceResult<List<EmployeeView>> result = employeeController.ViewEmployees();
             if (!result.IsOperationSuccess)
             {
                 Console.WriteLine(result.Message);
             }
             else
             {
-                this.ShowEmployeesDataInTabularFormat(result.DataList);
+                this.ShowEmployeesDataInTabularFormat(result.Data);
             }
 
         }
@@ -418,7 +418,7 @@ namespace EmployeeDirectory.UI.UIServices
 
         public void ViewAllRoles()
         {
-            List<RoleView> roles = roleController.ViewRoles().DataList;
+            List<RoleView> roles = roleController.ViewRoles().Data;
 
             ShowRolesDataInTabularFormat(roles);
         }
@@ -478,7 +478,7 @@ namespace EmployeeDirectory.UI.UIServices
         }
         public bool DoesRoleExist(string roleId)
         {
-            List<RoleView> roles = roleController.ViewRoles().DataList;
+            List<RoleView> roles = roleController.ViewRoles().Data;
             return roles.Any(role => role.Id == roleId);
         }
 

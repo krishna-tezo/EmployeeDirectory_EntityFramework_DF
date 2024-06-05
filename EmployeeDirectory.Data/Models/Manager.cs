@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace EmployeeDirectory.Models.Models;
-
+﻿namespace EmployeeDirectory.Data.Models;
 public partial class Manager
 {
     public string Id { get; set; } = null!;

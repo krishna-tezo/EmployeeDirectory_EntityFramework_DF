@@ -1,6 +1,6 @@
 ﻿namespace EmployeeDirectory.Core
 {
-    public interface IValidator
+    public interface IValidationService
     {
         ValidationResult ValidateEmail(string email);
         ValidationResult ValidateMobileNumber(string number);

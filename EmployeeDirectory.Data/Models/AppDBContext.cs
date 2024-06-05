@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Playground.Models.Interfaces;
 
-namespace EmployeeDirectory.Models.Models;
+namespace EmployeeDirectory.Data.Models;
 
 public partial class AppDBContext : DbContext
 {
@@ -62,7 +62,6 @@ public partial class AppDBContext : DbContext
                         entity.ModifiedBy = user;
                         entity.ModifiedDate = now;
                         break;
-
                 }
             }
         }

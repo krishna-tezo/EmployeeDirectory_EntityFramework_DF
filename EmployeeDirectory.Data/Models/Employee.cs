@@ -1,6 +1,6 @@
 ﻿using Playground.Models.Interfaces;
 
-namespace EmployeeDirectory.Models.Models;
+namespace EmployeeDirectory.Data.Models;
 
 public partial class Employee : IHasAuditProperties
 {

@@ -10,6 +10,6 @@ namespace EmployeeDirectory.Controllers
         public ServiceResult<bool> DoesRoleExists(string roleName, string locationName);
         ServiceResult<List<string>> GetAllDepartments();
         public ServiceResult<List<Tuple<string, string, string>>> GetRoleNamesWithLocation();
-        ServiceResult<RoleView> ViewRoles();
+        ServiceResult<List<RoleView>> ViewRoles();
     }
 }

@@ -1,8 +1,7 @@
-﻿using EmployeeDirectory.Interfaces;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 namespace EmployeeDirectory.Core
 {
-    public class Validator : IValidator
+    public class ValidationService : IValidationService
     {
         public ValidationResult ValidateEmail(string email)
         {
