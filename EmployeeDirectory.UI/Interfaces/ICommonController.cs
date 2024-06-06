@@ -1,4 +1,4 @@
-﻿using EmployeeDirectory.Models;
+﻿using EmployeeDirectory.Models.Models;
 
 namespace EmployeeDirectory.UI.Interfaces
 {

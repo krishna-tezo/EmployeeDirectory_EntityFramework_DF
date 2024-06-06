@@ -1,19 +1,17 @@
-﻿using EmployeeDirectory.Data.SummaryModels;
-using EmployeeDirectory.Models;
-using EmployeeDirectory.Models.Models;
+﻿using EmployeeDirectory.Models.Models;
+using EmployeeDirectory.Models.SummaryModels;
 
 
-namespace EmployeeDirectory.Services
+namespace EmployeeDirectory.Models.Interfaces
 {
     public interface IEmployeeService
     {
-        ServiceResult<int> AddEmployee(EmployeeModel employee);
-        ServiceResult<int> Delete(string id);
+        ServiceResult<int> AddEmployee(Employee employee);
+        ServiceResult<int> DeleteEmployee(string id);
         ServiceResult<string> GenerateNewId<T>();
-        ServiceResult<List<ProjectModel>> GetAllProjects();
+        ServiceResult<List<Project>> GetAllProjects();
         ServiceResult<List<EmployeeSummary>> GetEmployeeSummaries();
         ServiceResult<EmployeeSummary> GetEmployeeSummary(string id);
-        ServiceResult<TTarget> GetMappedObject<TSrc, TTarget>(TSrc source);
-        ServiceResult<int> UpdateEmployee(EmployeeModel employee);
+        ServiceResult<int> UpdateEmployee(Employee employee);
     }
 }

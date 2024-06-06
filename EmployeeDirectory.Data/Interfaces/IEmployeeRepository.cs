@@ -1,5 +1,5 @@
 ﻿using EmployeeDirectory.Data.Models;
-using EmployeeDirectory.Data.SummaryModels;
+using EmployeeDirectory.Models.SummaryModels;
 
 namespace EmployeeDirectory.Data.Interfaces
 {

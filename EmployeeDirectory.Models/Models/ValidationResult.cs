@@ -1,4 +1,4 @@
-﻿namespace EmployeeDirectory.Core
+﻿namespace EmployeeDirectory.Models.Models
 {
     public class ValidationResult
     {

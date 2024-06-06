@@ -1,28 +1,17 @@
-﻿using EmployeeDirectory.Models;
-using EmployeeDirectory.ViewModel;
+﻿using EmployeeDirectory.Model;
 using EmployeeDirectory.Models.Models;
-using EmployeeDirectory.Services;
-using EmployeeDirectory.Data.SummaryModels;
+using EmployeeDirectory.Models.SummaryModels;
+using EmployeeDirectory.Models.Interfaces;
 namespace EmployeeDirectory.UI.Controllers
 {
-    public class EmployeeController : IEmployeeController
+    public class EmployeeController(IEmployeeService employeeService) : IEmployeeController
     {
-        IEmployeeService employeeService;
-       
-       
-
-        public EmployeeController(IEmployeeService employeeService)
-        {
-            this.employeeService = employeeService;
-        }
+        readonly IEmployeeService employeeService = employeeService;
 
         public ServiceResult<string> GetNewEmployeeId()
         {
-            string empId = employeeService.GenerateNewId<EmployeeModel>().Data;
-            if (empId == null)
-            {
-                empId = "TEZ00001";
-            }
+            string empId = employeeService.GenerateNewId<Employee>().Data;
+            empId ??= "TEZ00001";
             return ServiceResult<string>.Success(empId);
         }
 
@@ -36,7 +25,7 @@ namespace EmployeeDirectory.UI.Controllers
             }
 
             List<EmployeeSummary> employeesSummary = employees.Data;
-            List<EmployeeView> employeesToView = new List<EmployeeView>();
+            List<EmployeeView> employeesToView = [];
 
             foreach (EmployeeSummary employee in employeesSummary)
             {
@@ -55,57 +44,56 @@ namespace EmployeeDirectory.UI.Controllers
 
         public ServiceResult<EmployeeView> ViewEmployee(string empId)
         {
-            EmployeeView employeeToView = new EmployeeView();
 
             var result = employeeService.GetEmployeeSummary(empId);
             if (result.IsOperationSuccess)
             {
                 EmployeeSummary employeeSummary = result.Data;
-                employeeToView = MapSummaryToView(employeeSummary).Data;
+                EmployeeView employeeToView = MapSummaryToView(employeeSummary).Data;
+                return ServiceResult<EmployeeView>.Success(employeeToView);
 
             }
             else
             {
                 return ServiceResult<EmployeeView>.Fail(result.Message);
             }
-            return ServiceResult<EmployeeView>.Success(employeeToView);
         }
 
-        public ServiceResult<EmployeeModel> GetEmployeeById(string id)
+        public ServiceResult<Employee> GetEmployeeById(string id)
         {
             var result = employeeService.GetEmployeeSummary(id);
             if (result.IsOperationSuccess)
             {
-                EmployeeModel employee = result.Data.Employee;
-                return ServiceResult<EmployeeModel>.Success(employee);
+                Employee employee = result.Data.Employee;
+                return ServiceResult<Employee>.Success(employee);
             }
             else
             {
-                return ServiceResult<EmployeeModel>.Fail(result.Message);
+                return ServiceResult<Employee>.Fail(result.Message);
             }
         }
 
-        public ServiceResult<int> AddEmployee(EmployeeModel employee)
+        public ServiceResult<int> AddEmployee(Employee employee)
         {
             
             return employeeService.AddEmployee(employee);
         }
 
-        public ServiceResult<int> EditEmployee(EmployeeModel employee)
+        public ServiceResult<int> EditEmployee(Employee employee)
         {
             return employeeService.UpdateEmployee(employee);
         }
 
         public ServiceResult<int> DeleteEmployee(string empId)
         {
-            return employeeService.Delete(empId);
+            return employeeService.DeleteEmployee(empId);
         }
 
         public ServiceResult<List<Tuple<string, string>>> GetProjectNames()
         {
             try
             {
-                List<ProjectModel> projects = employeeService.GetAllProjects().Data;
+                List<Project> projects = employeeService.GetAllProjects().Data;
                 List<Tuple<string, string>> projectDetails = projects
                     .Select(project => new { project.Id, project.Name })
                     .AsEnumerable()
@@ -120,11 +108,11 @@ namespace EmployeeDirectory.UI.Controllers
             }
         }
 
-        private ServiceResult<EmployeeView> MapSummaryToView(EmployeeSummary summary)
+        private static ServiceResult<EmployeeView> MapSummaryToView(EmployeeSummary summary)
         {
             try
             {
-                EmployeeView employee = new EmployeeView()
+                EmployeeView employee = new()
                 {
                     Id = summary.Employee.Id,
                     Name = $"{summary.Employee.FirstName} {summary.Employee.LastName}",

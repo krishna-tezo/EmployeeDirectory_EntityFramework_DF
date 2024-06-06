@@ -1,4 +1,4 @@
-﻿namespace EmployeeDirectory.Models
+﻿namespace EmployeeDirectory.Models.Models
 {
     public class ServiceResult<T>
     {

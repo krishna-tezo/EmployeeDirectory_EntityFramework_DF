@@ -1,7 +1,6 @@
-﻿using EmployeeDirectory.Models;
+﻿using EmployeeDirectory.Model;
 using EmployeeDirectory.Models.Models;
-using EmployeeDirectory.UI.ViewModels;
-using EmployeeDirectory.ViewModel;
+using EmployeeDirectory.UI.Models;
 
 namespace EmployeeDirectory.Interfaces
 {
@@ -11,7 +10,7 @@ namespace EmployeeDirectory.Interfaces
         void AddRole();
         void DeleteEmployee();
         void EditEmployee();
-        EmployeeModel GetEmployeeDetailsFromConsole(EmployeeModel employee, EmployeeFormType formType, string empId = "");
+        Employee GetEmployeeDetailsFromConsole(Employee employee, EmployeeFormType formType, string empId = "");
         
         void ShowEmployeesDataInTabularFormat(List<EmployeeView> employees);
         void ShowRolesDataInTabularFormat(List<RoleView> roles);

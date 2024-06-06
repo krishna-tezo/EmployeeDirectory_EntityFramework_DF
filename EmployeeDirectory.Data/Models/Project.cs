@@ -1,10 +1,9 @@
-﻿
-namespace EmployeeDirectory.Data.Models;
+﻿namespace EmployeeDirectory.Data.Models;
 public partial class Project
 {
-    public string Id { get; set; } = null!;
+    public string Id { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
     public string? ManagerId { get; set; }
 

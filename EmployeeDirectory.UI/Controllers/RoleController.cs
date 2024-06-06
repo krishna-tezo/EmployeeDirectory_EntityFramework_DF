@@ -1,8 +1,7 @@
-﻿using EmployeeDirectory.Models;
+﻿using EmployeeDirectory.Models.Interfaces;
 using EmployeeDirectory.Models.Models;
 using EmployeeDirectory.Models.SummaryModels;
-using EmployeeDirectory.Services;
-using EmployeeDirectory.UI.ViewModels;
+using EmployeeDirectory.UI.Models;
 
 using System.Data;
 
@@ -40,15 +39,15 @@ namespace EmployeeDirectory.Controllers
         //Add a role
         public ServiceResult<int> Add(RoleView viewRole)
         {
-            RoleModel role = new RoleModel();
+            Role role = new Role();
             RoleSummary roleSummary = new RoleSummary
             {
-                Role = new RoleModel { Id = viewRole.Id, Name = viewRole.Name },
-                Department = new DepartmentModel { Name = viewRole.Department },
-                Location = new LocationModel { Name = viewRole.Location},
+                Role = new Role { Id = viewRole.Id, Name = viewRole.Name },
+                Department = new Department { Name = viewRole.Department },
+                Location = new Location { Name = viewRole.Location},
                 Description = viewRole.Description
             };
-            return roleService.Add(roleSummary);
+            return roleService.AddRole(roleSummary);
             
         }
 
@@ -56,7 +55,7 @@ namespace EmployeeDirectory.Controllers
         //Generate a new Role Id
         public ServiceResult<string> GenerateRoleId()
         {
-            return roleService.GenerateNewId<RoleModel>();
+            return roleService.GenerateNewId<Role>();
         }
 
         // Get All Role Names along with location name
@@ -93,7 +92,7 @@ namespace EmployeeDirectory.Controllers
         {
             try
             {
-                List<DepartmentModel> departments = roleService.GetAllDepartments().Data;
+                List<Department> departments = roleService.GetAllDepartments().Data;
                 List<string> departmentsName = departments.Select(dept => dept.Name).Distinct().ToList();
                 return ServiceResult<List<string>>.Success(departmentsName);
             }
@@ -108,7 +107,7 @@ namespace EmployeeDirectory.Controllers
         {
             try
             {
-                RoleView employee = new RoleView()
+                RoleView employee = new()
                 {
                     Id = summary.Role.Id,
                     Name = summary.Role.Name,

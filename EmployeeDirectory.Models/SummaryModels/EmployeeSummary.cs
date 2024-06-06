@@ -1,31 +1,15 @@
 ﻿using EmployeeDirectory.Models.Models;
 
-namespace EmployeeDirectory.Data.SummaryModels
+namespace EmployeeDirectory.Models.SummaryModels
 {
     public class EmployeeSummary
     {
-        public EmployeeModel Employee { get; set; }
-        public RoleModel Role { get; set; }
-        public DepartmentModel Department { get; set; }
-        public LocationModel Location {  get; set; }
-        public ProjectModel Project { get; set; }
-        public ManagerModel Manager { get; set; }
-        //public string Id { get; set; }
-        //public string FirstName { get; set; }
-        //public string LastName { get; set; }
-        //public string Email { get; set; }
-        //public DateOnly? DOB { get; set; }
-        //public string MobileNumber { get; set; }
-        //public DateOnly? JoinDate { get; set; }
-        //public string ProjectId { get; set; }
-        //public string ProjectName { get; set; }
-        //public string RoleId { get; set; }
-        //public string Role { get; set; }
-        //public string DepartmentId { get; set; }
-        //public string Department { get; set; }
-        //public string LocationId { get; set; }
-        //public string Location { get; set; }
-        //public string ManagerId { get; set; }
+        public Employee Employee { get; set; }
+        public Role Role { get; set; }
+        public Department Department { get; set; }
+        public Location Location { get; set; }
+        public Project Project { get; set; }
+        public Manager Manager { get; set; }
         public string ManagerName { get; set; }
         public bool IsDeleted { get; set; }
     }

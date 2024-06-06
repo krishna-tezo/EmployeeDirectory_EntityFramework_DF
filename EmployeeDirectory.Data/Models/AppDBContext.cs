@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Playground.Models.Interfaces;
+﻿using EmployeeDirectory.Models.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeDirectory.Data.Models;
 
@@ -44,7 +44,7 @@ public partial class AppDBContext : DbContext
         var entries = ChangeTracker.Entries();
         foreach (var entry in entries)
         {
-            if (entry.Entity is IHasAuditProperties entity)
+            if (entry.Entity is IAuditable entity)
             {
                 var now = DateOnly.FromDateTime(DateTime.UtcNow);
                 var user = "System";

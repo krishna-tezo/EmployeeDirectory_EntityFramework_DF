@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using EmployeeDirectory.Data.Models;
 using EmployeeDirectory.Data.Interfaces;
 using EmployeeDirectory.Data.Repositories;
+using EmployeeDirectory.Models.Interfaces;
+using EmployeeDirectory.UI.Models;
 
 namespace EmployeeDirectory.Core
 {
@@ -38,6 +40,8 @@ namespace EmployeeDirectory.Core
                 options.UseSqlServer(configuration.GetConnectionString("MyDBConnectionString"))
                        .EnableSensitiveDataLogging();
             });
+            services.AddAutoMapper(typeof(Data.Models.MappingProfile));
+            services.AddAutoMapper(typeof(UI.Models.MappingProfile));
 
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();

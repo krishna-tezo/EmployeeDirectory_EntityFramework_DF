@@ -1,55 +1,38 @@
 ﻿using AutoMapper;
 using EmployeeDirectory.Data.Interfaces;
-using EmployeeDirectory.Data.Models;
-using EmployeeDirectory.Data.SummaryModels;
-using EmployeeDirectory.Models;
+using DM = EmployeeDirectory.Data.Models;
+using EmployeeDirectory.Models.Interfaces;
 using EmployeeDirectory.Models.Models;
+using EmployeeDirectory.Models.SummaryModels;
 
 namespace EmployeeDirectory.Services
 {
-    public class EmployeeService : IEmployeeService
+    public class EmployeeService(IEmployeeRepository employeeRepository, IGenericRepository<DM.Project> projectRepository, IGenericRepository<DM.Manager> managerRepository, IMapper mapper) : IEmployeeService
     {
-        IEmployeeRepository employeeRepository;
-        IGenericRepository<Project> projectRepository;
-        IGenericRepository<Manager> managerRepository;
-        public EmployeeService(IEmployeeRepository employeeRepository, IGenericRepository<Project> projectRepository, IGenericRepository<Manager> managerRepository)
-        {
-            this.employeeRepository = employeeRepository;
-            this.projectRepository = projectRepository;
-            this.managerRepository = managerRepository;
-        }
+        readonly IEmployeeRepository employeeRepository = employeeRepository;
+        readonly IGenericRepository<DM.Project> projectRepository = projectRepository;
+        readonly IGenericRepository<DM.Manager> managerRepository = managerRepository;
+        readonly IMapper mapper = mapper;
 
         #region Summary
         public ServiceResult<List<EmployeeSummary>> GetEmployeeSummaries()
         {
-            List<EmployeeSummary> employees = [];
             try
             {
-                employees = employeeRepository.GetEmployeesSummary();
+                List<EmployeeSummary> employees = employeeRepository.GetEmployeesSummary();
+                return ServiceResult<List<EmployeeSummary>>.Success(employees);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
-            }
-            employees = employees.Where(emp => emp.IsDeleted == false).ToList();
-            if (employees != null)
-            {
-                return ServiceResult<List<EmployeeSummary>>.Success(employees);
-            }
-            else
-            {
-                return ServiceResult<List<EmployeeSummary>>.Fail("No Employees");
+                return ServiceResult<List<EmployeeSummary>>.Fail("Database Error:"+ex.Message);
             }
         }
 
         public ServiceResult<EmployeeSummary> GetEmployeeSummary(string id)
         {
-
-            EmployeeSummary employee = new EmployeeSummary();
             try
             {
-                employee = employeeRepository.GetEmployeeSummaryById(id);
+                EmployeeSummary employee = employeeRepository.GetEmployeeSummaryById(id);
                 if (employee != null)
                 {
                     return ServiceResult<EmployeeSummary>.Success(employee);
@@ -67,39 +50,37 @@ namespace EmployeeDirectory.Services
         }
         #endregion
 
-        #region CRUD
-        //Read all
-        public ServiceResult<List<ProjectModel>> GetAllProjects()
+        public ServiceResult<List<Project>> GetAllProjects()
         {
             try
             {
-                List<ProjectModel> collection = [];
-                List<Project> Project = projectRepository.GetAll();
+                List<Project> collection = [];
+                List<DM.Project> Project = projectRepository.GetAll();
                 foreach (var project in Project)
                 {
-                    collection.Add(GetMappedObject<Project, ProjectModel>(project).Data);
+                    collection.Add(mapper.Map<DM.Project, Project>(project));
                 }
 
                 if (collection == null || collection.Count == 0)
                 {
-                    return ServiceResult<List<ProjectModel>>.Fail($"No Projects to show");
+                    return ServiceResult<List<Project>>.Fail($"No Projects to show");
                 }
 
-                return ServiceResult<List<ProjectModel>>.Success(collection);
+                return ServiceResult<List<Project>>.Success(collection);
             }
             catch (Exception ex)
             {
-                return ServiceResult<List<ProjectModel>>.Fail("Database Issue: " + ex.Message);
+                return ServiceResult<List<Project>>.Fail("Database Issue: " + ex.Message);
             }
         }
 
         //Add
-        public ServiceResult<int> AddEmployee(EmployeeModel employee)
+        public ServiceResult<int> AddEmployee(Employee employee)
         {
             try
             {
                 int rowsAffected = 0;
-                Employee emp = GetMappedObject<EmployeeModel, Employee>(employee).Data;
+                DM.Employee emp = mapper.Map<Employee, DM.Employee>(employee);
 
                 rowsAffected = employeeRepository.Insert(emp);
 
@@ -116,12 +97,12 @@ namespace EmployeeDirectory.Services
         }
 
         //Update
-        public ServiceResult<int> UpdateEmployee(EmployeeModel employee)
+        public ServiceResult<int> UpdateEmployee(Employee employee)
         {
             try
             {
                 int rowsAffected = 0;
-                Employee emp = GetMappedObject<EmployeeModel, Employee>(employee).Data;
+                DM.Employee emp = mapper.Map<Employee, DM.Employee>(employee);
                 rowsAffected = employeeRepository.UpdateEmployee(emp);
 
                 if (rowsAffected == 0)
@@ -136,7 +117,7 @@ namespace EmployeeDirectory.Services
             }
         }
         //Delete Employee
-        public ServiceResult<int> Delete(string id)
+        public ServiceResult<int> DeleteEmployee(string id)
         {
             try
             {
@@ -161,15 +142,15 @@ namespace EmployeeDirectory.Services
         {
             try
             {
-                string lastId = null;
+                string? lastId = null;
                 string prefix = "";
                 int suffixCount = 4;
 
                 switch (typeof(T).Name)
                 {
-                    case nameof(EmployeeModel):
+                    case nameof(Employee):
                         {
-                            Employee employee = employeeRepository.GetLast();
+                            DM.Employee employee = employeeRepository.GetLast();
                             if (employee == null)
                             {
                                 return ServiceResult<string>.Success("TEZ00001");
@@ -179,9 +160,9 @@ namespace EmployeeDirectory.Services
                             suffixCount = 5;
                             break;
                         }
-                    case nameof(ProjectModel):
+                    case nameof(Project):
                         {
-                            Project project = projectRepository.GetLast();
+                            DM.Project project = projectRepository.GetLast();
                             if (project == null)
                             {
                                 return ServiceResult<string>.Success("PR0001");
@@ -190,9 +171,9 @@ namespace EmployeeDirectory.Services
                             prefix = "PR";
                             break;
                         }
-                    case nameof(ManagerModel):
+                    case nameof(Manager):
                         {
-                            Manager manager = managerRepository.GetLast();
+                            DM.Manager manager = managerRepository.GetLast();
                             if (manager == null)
                             {
                                 return ServiceResult<string>.Success("LOC001");
@@ -205,7 +186,7 @@ namespace EmployeeDirectory.Services
                         return ServiceResult<string>.Fail("Unsupported entity type for ID generation");
                 }
 
-                string numericPart = lastId?.Substring(prefix.Length);
+                string? numericPart = lastId?.Substring(prefix.Length);
 
                 if (int.TryParse(numericPart, out int numericId))
                 {
@@ -222,18 +203,6 @@ namespace EmployeeDirectory.Services
             {
                 return ServiceResult<string>.Fail("Database Issue: " + ex.Message);
             }
-        }
-
-        #endregion
-
-        //Mapper
-        public ServiceResult<TTarget> GetMappedObject<TSrc, TTarget>(TSrc source)
-        {
-            MapperConfiguration config = new MapperConfiguration(cfg => cfg.CreateMap<TSrc, TTarget>());
-            Mapper mapper = new Mapper(config);
-            TTarget result = mapper.Map<TSrc, TTarget>(source);
-            return ServiceResult<TTarget>.Success(result);
-
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace EmployeeDirectory.Core
+﻿using EmployeeDirectory.Models.Models;
+
+namespace EmployeeDirectory.Core
 {
     public interface IValidationService
     {

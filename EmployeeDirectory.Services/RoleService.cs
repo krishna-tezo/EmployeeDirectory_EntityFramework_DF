@@ -1,24 +1,18 @@
 ﻿using EmployeeDirectory.Data.Interfaces;
-using EmployeeDirectory.Models;
-using EmployeeDirectory.Data.Models;
+using DM = EmployeeDirectory.Data.Models;
 using EmployeeDirectory.Models.SummaryModels;
 using EmployeeDirectory.Models.Models;
 using AutoMapper;
+using EmployeeDirectory.Models.Interfaces;
 
 namespace EmployeeDirectory.Services
 {
-    public class RoleService : IRoleService
+    public class RoleService(IRoleRepository roleRepository, IGenericRepository<DM.Department> departmentRepository, IGenericRepository<DM.Location> locationRepository) : IRoleService
     {
 
-        IRoleRepository roleRepository;
-        IGenericRepository<Department> departmentRepository;
-        IGenericRepository<Location> locationRepository;
-        public RoleService(IRoleRepository roleRepository, IGenericRepository<Department> departmentRepository, IGenericRepository<Location> locationRepository)
-        {
-            this.roleRepository = roleRepository;
-            this.departmentRepository = departmentRepository;
-            this.locationRepository = locationRepository;
-        }
+        readonly IRoleRepository roleRepository = roleRepository;
+        readonly IGenericRepository<DM.Department> departmentRepository = departmentRepository;
+        readonly IGenericRepository<DM.Location> locationRepository = locationRepository;
 
         public ServiceResult<List<RoleSummary>> GetRolesSummary()
         {
@@ -38,7 +32,6 @@ namespace EmployeeDirectory.Services
                 return ServiceResult<List<RoleSummary>>.Fail("Database Issue:" + ex.Message);
             }
         }
-
         public ServiceResult<RoleSummary> GetRoleSummary(string id)
         {
             try
@@ -57,11 +50,11 @@ namespace EmployeeDirectory.Services
                 return ServiceResult<RoleSummary>.Fail("Database Issue:" + ex.Message);
             }
         }
-        public ServiceResult<int> Add(RoleSummary roleSummary)
+        public ServiceResult<int> AddRole(RoleSummary roleSummary)
         {
             try
             {
-                Role role = new Role();
+                DM.Role role = new();
                 string departmentId = GetDepartmentIdByName(roleSummary.Department.Name).Data;
 
                 string locationId = GetLocationIdByName(roleSummary.Location.Name).Data;
@@ -90,85 +83,61 @@ namespace EmployeeDirectory.Services
             }
         }
 
-        //CRUD
-        public ServiceResult<List<DepartmentModel>> GetAllDepartments()
+
+        public ServiceResult<List<Department>> GetAllDepartments()
         {
             try
             {
-                List<Department> departments;
+                List<DM.Department> departments;
 
-                departments = departmentRepository.GetAll().Cast<Department>().ToList();
+                departments = departmentRepository.GetAll().Cast<DM.Department>().ToList();
 
-                List<DepartmentModel> departmentModels = new List<DepartmentModel>();
-                foreach (Department department in departments)
+                List<Department> departmentModels = [];
+                foreach (DM.Department department in departments)
                 {
-                    departmentModels.Add(GetMappedObject<Department, DepartmentModel>(department).Data);
+                    departmentModels.Add(GetMappedObject<DM.Department, Department>(department).Data);
                 }
 
                 if (departmentModels == null || departmentModels.Count == 0)
                 {
-                    return ServiceResult<List<DepartmentModel>>.Fail($"No department to show");
+                    return ServiceResult<List<Department>>.Fail($"No department to show");
                 }
 
-                return ServiceResult<List<DepartmentModel>>.Success(departmentModels);
+                return ServiceResult<List<Department>>.Success(departmentModels);
             }
             catch (Exception ex)
             {
-                return ServiceResult<List<DepartmentModel>>.Fail("Database Issue: " + ex.Message);
+                return ServiceResult<List<Department>>.Fail("Database Issue: " + ex.Message);
             }
         }
-        public ServiceResult<List<LocationModel>> GetAllLocations()
+        public ServiceResult<List<Location>> GetAllLocations()
         {
             try
             {
-                List<Location> locations;
+                List<DM.Location> locations;
 
-                locations = locationRepository.GetAll().Cast<Location>().ToList();
+                locations = locationRepository.GetAll().Cast<DM.Location>().ToList();
 
-                List<LocationModel> locationModels = new List<LocationModel>();
-                foreach (Location location in locations)
+                List<Location> locationModels = [];
+                foreach (DM.Location location in locations)
                 {
-                    locationModels.Add(GetMappedObject<Location, LocationModel>(location).Data);
+                    locationModels.Add(GetMappedObject<DM.Location, Location>(location).Data);
                 }
 
                 if (locationModels == null || locationModels.Count == 0)
                 {
-                    return ServiceResult<List<LocationModel>>.Fail($"No location to show");
+                    return ServiceResult<List<Location>>.Fail($"No location to show");
                 }
 
-                return ServiceResult<List<LocationModel>>.Success(locationModels);
+                return ServiceResult<List<Location>>.Success(locationModels);
             }
             catch (Exception ex)
             {
-                return ServiceResult<List<LocationModel>>.Fail("Database Issue: " + ex.Message);
+                return ServiceResult<List<Location>>.Fail("Database Issue: " + ex.Message);
             }
         }
-        //Read by Id
-        public ServiceResult<T> Get<T>(string id) where T : class
-        {
-            try
-            {
-                T entity = null;
-                if (typeof(T).Name == "Department")
-                {
-                    entity = (T)Convert.ChangeType(departmentRepository.Get(id), typeof(T));
-                }
-                else if (typeof(T).Name == "Location")
-                {
-                    entity = (T)Convert.ChangeType(locationRepository.Get(id), typeof(T));
-                }
 
-                if (entity == null)
-                {
-                    return ServiceResult<T>.Fail($"{typeof(T).Name} Id {id} doesn't exist");
-                }
-                return ServiceResult<T>.Success(entity);
-            }
-            catch (Exception ex)
-            {
-                return ServiceResult<T>.Fail("Database Issue: " + ex.Message);
-            }
-        }
+        
         public ServiceResult<string> GenerateNewId<T>()
         {
             try
@@ -178,7 +147,7 @@ namespace EmployeeDirectory.Services
                 int suffixCount;
                 switch (typeof(T).Name)
                 {
-                    case nameof(RoleModel):
+                    case nameof(Role):
                         var role = roleRepository.GetLast();
                         if (role == null)
                         {
@@ -188,7 +157,7 @@ namespace EmployeeDirectory.Services
                         prefix = "RL";
                         suffixCount = 4;
                         break;
-                    case nameof(DepartmentModel):
+                    case nameof(Department):
                         var department = departmentRepository.GetLast();
                         if (department == null)
                         {
@@ -198,7 +167,7 @@ namespace EmployeeDirectory.Services
                         prefix = "DPT";
                         suffixCount = 3;
                         break;
-                    case nameof(LocationModel):
+                    case nameof(Location):
                         var location = locationRepository.GetLast();
                         if (location == null)
                         {
@@ -237,7 +206,7 @@ namespace EmployeeDirectory.Services
         {
             try
             {
-                List<Location> locations = locationRepository.GetAll();
+                List<DM.Location> locations = locationRepository.GetAll();
                 string locationId;
                 if (locations.Count > 0)
                 {
@@ -245,8 +214,8 @@ namespace EmployeeDirectory.Services
 
                     if (location == null)
                     {
-                        locationId = GenerateNewId<LocationModel>().Data;
-                        Location newLocation = new Location
+                        locationId = GenerateNewId<Location>().Data;
+                        DM.Location newLocation = new()
                         {
                             Id = locationId,
                             Name = name
@@ -273,7 +242,7 @@ namespace EmployeeDirectory.Services
         {
             try
             {
-                List<Department> departments = departmentRepository.GetAll();
+                List<DM.Department> departments = departmentRepository.GetAll();
 
                 if (departments.Count > 0)
                 {
@@ -296,8 +265,8 @@ namespace EmployeeDirectory.Services
         {
             try
             {
-                List<Role> roles = roleRepository.GetAll();
-                List<Location> locations = locationRepository.GetAll();
+                List<DM.Role> roles = roleRepository.GetAll();
+                List<DM.Location> locations = locationRepository.GetAll();
 
                 var result = roles
                     .Join(locations, role => role.LocationId, location => location.Id, (role, location) => new { Role = role, Location = location })

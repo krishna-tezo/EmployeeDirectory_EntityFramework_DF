@@ -1,5 +1,6 @@
-﻿using EmployeeDirectory.Data.Interfaces;
-using EmployeeDirectory.Data.Models;
+﻿using AutoMapper;
+using EmployeeDirectory.Data.Interfaces;
+using DM = EmployeeDirectory.Data.Models;
 using EmployeeDirectory.Models.Models;
 using EmployeeDirectory.Models.SummaryModels;
 using Microsoft.EntityFrameworkCore;
@@ -7,14 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeDirectory.Data.Repositories
 {
-    public class RoleRepository : GenericRepository<Role>, IRoleRepository
+    public class RoleRepository(DM.AppDBContext context, IMapper mapper) : GenericRepository<DM.Role>(context), IRoleRepository
     {
-        private readonly AppDBContext context;
-
-        public RoleRepository(AppDBContext context) : base(context)
-        {
-            this.context = context;
-        }
+        private readonly DM.AppDBContext context = context;
+        private readonly IMapper mapper = mapper;
 
         public List<RoleSummary> GetRolesSummary()
         {
@@ -27,11 +24,13 @@ namespace EmployeeDirectory.Data.Repositories
 
             foreach (var role in roles)
             {
-                RoleSummary summary = new RoleSummary();
-                summary.Role = MapProperties<Role, RoleModel>(role);
-                summary.Location = MapProperties<Location, LocationModel>(role.Location);
-                summary.Department = MapProperties<Department, DepartmentModel>(role.Department);
-                summary.Description = role.Description;
+                RoleSummary summary = new()
+                {
+                    Role = mapper.Map<DM.Role, Role>(role),
+                    Location = mapper.Map<DM.Location, Location>(role.Location),
+                    Department = mapper.Map<DM.Department, Department>(role.Department),
+                    Description = role.Description
+                };
 
                 roleSummaries.Add(summary);
             }
@@ -53,34 +52,12 @@ namespace EmployeeDirectory.Data.Repositories
             }
 
             RoleSummary summary = new RoleSummary();
-            summary.Role = MapProperties<Role, RoleModel>(role);
-            summary.Location = MapProperties<Location, LocationModel>(role.Location);
-            summary.Department = MapProperties<Department, DepartmentModel>(role.Department);
+            summary.Role = mapper.Map<DM.Role, Role>(role);
+            summary.Location = mapper.Map<DM.Location, Location>(role.Location);
+            summary.Department = mapper.Map<DM.Department, Department>(role.Department);
             summary.Description = role.Description;
 
             return summary;
-        }
-
-        private TTarget MapProperties<TSource, TTarget>(TSource source) where TTarget : class, new()
-        {
-            var sourceProperties = typeof(TSource).GetProperties();
-            var destinationProperties = typeof(TTarget).GetProperties();
-
-            TTarget target = new TTarget();
-
-            foreach (var sourceProperty in sourceProperties)
-            {
-                var targetProperty = destinationProperties.FirstOrDefault(p => p.Name == sourceProperty.Name && p.PropertyType == sourceProperty.PropertyType);
-                if (targetProperty != null)
-                {
-                    var value = sourceProperty.GetValue(source);
-                    if (value != null)
-                    {
-                        targetProperty.SetValue(target, value);
-                    }
-                }
-            }
-            return target;
         }
 
     }

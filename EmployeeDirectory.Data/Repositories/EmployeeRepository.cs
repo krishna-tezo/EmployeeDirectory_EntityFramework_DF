@@ -1,24 +1,22 @@
 ﻿using EmployeeDirectory.Data.Interfaces;
-using EmployeeDirectory.Data.SummaryModels;
-using EmployeeDirectory.Data.Models;
+using DM = EmployeeDirectory.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using EmployeeDirectory.Models.Models;
+using AutoMapper;
+using EmployeeDirectory.Models.SummaryModels;
 
 
 namespace EmployeeDirectory.Data.Repositories
 {
-    public class EmployeeRepository : GenericRepository<Employee>, IEmployeeRepository
+    public class EmployeeRepository(DM.AppDBContext context, IMapper mapper) : GenericRepository<DM.Employee>(context), IEmployeeRepository
     {
-        private readonly AppDBContext context;
-        public EmployeeRepository(AppDBContext context) : base(context)
-        {
-            this.context = context;
-        }
+        private readonly DM.AppDBContext context = context;
+        private readonly IMapper mapper = mapper;
 
         public List<EmployeeSummary> GetEmployeesSummary()
         {
             var employees = context.Employees
-                .Where(e => e.IsDeleted != true)
+                .Where(e => !e.IsDeleted)
                 .Include(e => e.Project)
                     .ThenInclude(p => p.Manager)
                         .ThenInclude(m => m.Emp)
@@ -32,15 +30,16 @@ namespace EmployeeDirectory.Data.Repositories
 
             foreach (var employee in employees)
             {
-                var summary = new EmployeeSummary();
-
-                summary.Employee = MapProperties<Employee, EmployeeModel>(employee);
-                summary.Role = MapProperties<Role, RoleModel>(employee.Role);
-                summary.Project = MapProperties<Project, ProjectModel>(employee.Project);
-                summary.Manager = MapProperties<Manager, ManagerModel>(employee.Project.Manager);
-                summary.Department = MapProperties<Department, DepartmentModel>(employee.Role.Department);
-                summary.Location = MapProperties<Location, LocationModel>(employee.Role.Location);
-                summary.ManagerName = $"{employee.Project.Manager.Emp.FirstName} {employee.Project.Manager.Emp.LastName}";
+                EmployeeSummary summary = new ()
+                {
+                    Employee = mapper.Map<DM.Employee, Employee>(employee),
+                    Role = mapper.Map<DM.Role, Role>(employee.Role),
+                    Project = mapper.Map<DM.Project, Project>(employee.Project),
+                    Manager = mapper.Map<DM.Manager, Manager>(employee.Project.Manager),
+                    Department = mapper.Map<DM.Department, Department>(employee.Role.Department),
+                    Location = mapper.Map<DM.Location, Location>(employee.Role.Location),
+                    ManagerName = $"{employee.Project.Manager.Emp.FirstName} {employee.Project.Manager.Emp.LastName}"
+                };
 
                 employeeSummaries.Add(summary);
             }
@@ -62,26 +61,25 @@ namespace EmployeeDirectory.Data.Repositories
                      .ThenInclude(r => r.Department)
                   .FirstOrDefault();
 
-            if (employee == null)
+            if (employee != null)
             {
-                return null;
+                return new EmployeeSummary()
+                {
+                    Employee = mapper.Map<DM.Employee, Employee>(employee),
+                    Role = mapper.Map<DM.Role, Role>(employee.Role),
+                    Project = mapper.Map<DM.Project, Project>(employee.Project),
+                    Manager = mapper.Map<DM.Manager, Manager>(employee.Project.Manager),
+                    Department = mapper.Map<DM.Department, Department>(employee.Role.Department),
+                    Location = mapper.Map<DM.Location, Location>(employee.Role.Location),
+                    ManagerName = $"{employee.Project.Manager.Emp.FirstName} {employee.Project.Manager.Emp.LastName}"
+                };
             }
-
-            EmployeeSummary summary = new EmployeeSummary();
-            summary.Employee = MapProperties<Employee, EmployeeModel>(employee);
-            summary.Role = MapProperties<Role, RoleModel>(employee.Role);
-            summary.Project = MapProperties<Project, ProjectModel>(employee.Project);
-            summary.Manager = MapProperties<Manager, ManagerModel>(employee.Project.Manager);
-            summary.Department = MapProperties<Department, DepartmentModel>(employee.Role.Department);
-            summary.Location = MapProperties<Location, LocationModel>(employee.Role.Location);
-            summary.ManagerName = $"{employee.Project.Manager.Emp.FirstName} {employee.Project.Manager.Emp.LastName}";
-
-            return summary;
+            return null;
         }
 
-        public int UpdateEmployee(Employee employee)
+        public int UpdateEmployee(DM.Employee employee)
         {
-            Employee trackedEntity = context.Employees.Find(employee.Id);
+            DM.Employee trackedEntity = context.Employees.Find(employee.Id);
 
             employee.CreatedBy = trackedEntity.CreatedBy;
             employee.CreatedDate = trackedEntity.CreatedDate;
@@ -99,29 +97,5 @@ namespace EmployeeDirectory.Data.Repositories
             }
             return 0;
         }
-
-        private TTarget MapProperties<TSource, TTarget>(TSource source) where TTarget : class, new()
-        {
-            var sourceProperties = typeof(TSource).GetProperties();
-            var destinationProperties = typeof(TTarget).GetProperties();
-
-            
-            TTarget target = new TTarget();
-
-            foreach (var sourceProperty in sourceProperties)
-            {
-                var targetProperty = destinationProperties.FirstOrDefault(p => p.Name == sourceProperty.Name && p.PropertyType == sourceProperty.PropertyType);
-                if (targetProperty != null)
-                {
-                    var value = sourceProperty.GetValue(source);
-                    if (value != null)
-                    {
-                        targetProperty.SetValue(target, value);
-                    }
-                }
-            }
-            return target;
-        }
-
     }
 }

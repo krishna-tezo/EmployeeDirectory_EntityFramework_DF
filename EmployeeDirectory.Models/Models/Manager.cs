@@ -1,8 +1,8 @@
 ﻿namespace EmployeeDirectory.Models.Models;
-public partial class ManagerModel
+public class Manager
 {
     public string Id { get; set; }
 
-    public string? EmpId { get; set; }
+    public string EmpId { get; set; }
 
 }

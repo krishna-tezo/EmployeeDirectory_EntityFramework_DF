@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using EmployeeDirectory.Models.Models;
+using System.Text.RegularExpressions;
 namespace EmployeeDirectory.Core
 {
     public class ValidationService : IValidationService

@@ -1,11 +1,10 @@
 ﻿using EmployeeDirectory.Controllers;
 using EmployeeDirectory.Core;
 using EmployeeDirectory.Interfaces;
-using EmployeeDirectory.Models;
+using EmployeeDirectory.Model;
 using EmployeeDirectory.Models.Models;
 using EmployeeDirectory.UI.Controllers;
-using EmployeeDirectory.UI.ViewModels;
-using EmployeeDirectory.ViewModel;
+using EmployeeDirectory.UI.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
 
@@ -32,7 +31,7 @@ namespace EmployeeDirectory.UI.UIServices
         public void AddEmployee()
         {
             Console.WriteLine("\n----Welcome to Add Employee Form----\n");
-            EmployeeModel employee = GetEmployeeDetailsFromConsole(new EmployeeModel(), EmployeeFormType.Add);
+            Employee employee = GetEmployeeDetailsFromConsole(new Employee(), EmployeeFormType.Add);
             ServiceResult<int> result = employeeController.AddEmployee(employee);
             Console.WriteLine(result.Message);
 
@@ -41,7 +40,7 @@ namespace EmployeeDirectory.UI.UIServices
         //Edit Employee
         public void EditEmployee()
         {
-            EmployeeModel? employee;
+            Employee? employee;
             Console.WriteLine("\n----Welcome To Edit Employee Form----\n");
 
             string? empId;
@@ -59,7 +58,7 @@ namespace EmployeeDirectory.UI.UIServices
                 }
                 else
                 {
-                    ServiceResult<EmployeeModel> result = employeeController.GetEmployeeById(empId);
+                    ServiceResult<Employee> result = employeeController.GetEmployeeById(empId);
 
                     if (result.IsOperationSuccess)
                     {
@@ -76,7 +75,7 @@ namespace EmployeeDirectory.UI.UIServices
         }
 
         //Get Employee Details From Console
-        public EmployeeModel GetEmployeeDetailsFromConsole(EmployeeModel employee, EmployeeFormType formType, string? empId = "")
+        public Employee GetEmployeeDetailsFromConsole(Employee employee, EmployeeFormType formType, string? empId = "")
         {
 
             Console.WriteLine("----Input Employee Details----");

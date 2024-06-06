@@ -1,4 +1,4 @@
-﻿namespace EmployeeDirectory.UI.ViewModels
+﻿namespace EmployeeDirectory.UI.Models
 {
     public class RoleView
     {
